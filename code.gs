@@ -1,3 +1,6 @@
+//coded by ZaniestP 7-Sep-2026, and a little help from Gemini.
+
+
 const SPREADSHEET_ID = 'YOUR SPREADSHEET ID HERE';
 
 function doPost(e) {
