@@ -1,9 +1,8 @@
 # QRattendance
 
-## https://zaniestp.github.io/QRattendance/
+## [https://zaniestp.github.io/QRattendance/](https://zaniestp.github.io/QRattendance/)
 
 Generate a QR Code for attendance using Form SG and transfer the data to Google Sheet for data analytics.
-
 
 ```text
       /\_/\
@@ -19,13 +18,12 @@ Generate a QR Code for attendance using Form SG and transfer the data to Google 
 
 ```
 
-Your form is at **Form.Gov**
-Your data is at **Google Sheet (Replicated for analytics)**
-Your POST data script is at Google
-Your Webhook is at Plumber at GovTech!
+* Your form is at **Form.Gov**
+* Your data is at **Google Sheet (Replicated for analytics)**
+* Your POST data script is at Google
+* Your Webhook is at Plumber at GovTech!
 
-.NOTES
-To use:
+NOTES To users:
 1. Please ensure that you have your Google worksheet ready on the second tab. The name does not matter.
 2. The name of the of the data header of the Google Sheet must be the same as the field names in Form SG.
 3. Please replace the Google Sheet ID with your ID in the script file.
