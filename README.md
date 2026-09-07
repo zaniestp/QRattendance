@@ -2,12 +2,12 @@
 
 ## https://zaniestp.github.io/QRattendance/
 
-
 Generate a QR Code for attendance using Form SG and transfer the data to Google Sheet for data analytics.
-*********************************************************
+
+
 ```text
       /\_/\
-     ( >.< )   Meow!
+     ( >.< )    Meow!
       > ^ <
     ~~~~~~~~~~~
   ███████╗  █████╗  ███╗   ██╗ ██╗ ███████╗ ███████╗ ████████╗ ██████╗
@@ -15,14 +15,12 @@ Generate a QR Code for attendance using Form SG and transfer the data to Google 
     ███╔╝  ███████║ ██╔██╗ ██║ ██║ █████╗   ███████╗    ██║    ██████╔╝
    ███╔╝   ██╔══██║ ██║╚██╗██║ ██║ ██╔══╝   ╚════██║    ██║    ██╔══╝
   ███████╗ ██║  ██║ ██║ ╚████║ ██║ ███████╗ ███████║    ██║    ██║
-  ╚══════╝ ╚═╝  ╚═╝ ╚═╝  ╚═══╝ ╚═╝ ╚══════╝ ╚══════╝    ╚═╝    ╚═╝
-
-*********************************************************
+  ╚══════╝ ╚═╝  ╚═╝ ╚═╝   ╚═══╝ ╚═╝ ╚══════╝ ╚══════╝    ╚═╝    ╚═╝
 
 ```
 
 Your form is at **Form.Gov**
-Your data is at** Google Sheet (Replicated for analytics)**
+Your data is at **Google Sheet (Replicated for analytics)**
 Your POST data script is at Google
 Your Webhook is at Plumber at GovTech!
 
