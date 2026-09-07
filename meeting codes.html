@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting QR Code Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCodeJS CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 z-50 bg-emerald-600 text-white px-5 py-3 rounded-lg shadow-2xl flex items-center gap-3 transform translate-y-[-150%] opacity-0 transition-all duration-300">
+        <i class="fa-solid fa-circle-check text-xl"></i>
+        <span id="toast-message" class="font-medium text-sm">Action successful!</span>
+    </div>
+
+    <!-- Presentation Mode Overlay -->
+    <div id="presentation-overlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md hidden flex-col items-center justify-center p-6 text-center animate-fadeIn">
+        <div class="absolute top-6 right-6 flex items-center gap-3">
+            <button onclick="closePresentationMode()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Back to Dashboard</span>
+            </button>
+        </div>
+
+        <div class="max-w-2xl w-full flex flex-col items-center">
+            <div class="mb-4 inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-xs font-semibold uppercase tracking-wider border border-indigo-500/20">
+                Attendance QR Code
+            </div>
+            <h1 id="pres-meeting-name" class="text-3xl md:text-5xl font-extrabold text-white mb-2 tracking-tight">Contact Time</h1>
+            <p id="pres-meeting-date" class="text-slate-400 text-lg md:text-xl font-medium mb-8">07/09/2026 (Excel Value: 46272)</p>
+
+            <!-- Display QR Code Container -->
+            <div class="p-6 bg-white rounded-3xl shadow-2xl border border-slate-700/50 my-2 inline-block">
+                <div id="presentation-qrcode"></div>
+            </div>
+
+            <p class="text-slate-400 text-sm mt-6 flex items-center gap-2">
+                <i class="fa-solid fa-qrcode text-indigo-400"></i>
+                Scan with mobile device to log attendance
+            </p>
+            
+            <button onclick="closePresentationMode()" class="mt-8 text-slate-500 hover:text-slate-300 text-xs font-medium underline underline-offset-4 transition-colors">
+                Close (Esc)
+            </button>
+        </div>
+    </div>
+
+    <!-- GitHub Credits Popup Modal -->
+    <div id="credits-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-slate-100">
+            <button onclick="closeCreditsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-3 bg-indigo-600/20 text-indigo-400 rounded-xl border border-indigo-500/30">
+                    <i class="fa-brands fa-github text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Project Credits</h3>
+                    <p class="text-xs text-slate-400">Meeting QR Code Generator</p>
+                </div>
+            </div>
+
+            <p class="text-sm text-slate-300 mb-6 leading-relaxed">
+                This tool helps convert meeting dates to Excel serial numbers and generates direct attendance QR codes for Form.gov.sg.
+            </p>
+
+            <div class="space-y-3">
+                <!-- GitHub Link (REPLACE YOUR LINK BELOW) -->
+                <a id="github-link" href="https://github.com/YOUR_USERNAME/YOUR_REPOSITORY" target="_blank" rel="noopener noreferrer" 
+                   class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-950 text-white font-medium rounded-xl border border-slate-700 flex items-center justify-between group transition-all">
+                    <span class="flex items-center gap-2.5 text-sm">
+                        <i class="fa-brands fa-github text-lg text-indigo-400 group-hover:text-indigo-300"></i>
+                        <span>GitHub Repository</span>
+                    </span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs text-slate-500 group-hover:text-slate-300"></i>
+                </a>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-700/60 flex justify-end">
+                <button onclick="closeCreditsModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="max-w-6xl mx-auto w-full px-4 py-8 flex-grow flex flex-col">
+        
+        <!-- Header -->
+        <header class="mb-8 border-b border-slate-800 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-1">
+                    <div class="p-2.5 bg-indigo-600/20 text-indigo-400 rounded-xl border border-indigo-500/30">
+                        <i class="fa-solid fa-qrcode text-2xl"></i>
+                    </div>
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Meeting QR Code Generator</h1>
+                </div>
+                <p class="text-slate-400 text-sm">Generate form URLs and embedded attendance QR codes with Excel serial dates</p>
+            </div>
+        </header>
+
+        <!-- Form and Preview Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Left Panel: Form Input -->
+            <div class="lg:col-span-7 bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur-sm space-y-6">
+                
+                <!-- Preset Badges -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">
+                        Quick Presets
+                    </label>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="applyPreset('Contact Time')" class="px-3 py-1.5 bg-slate-700/70 hover:bg-indigo-600 text-slate-200 hover:text-white rounded-lg text-xs font-medium transition-all border border-slate-600/50 flex items-center gap-1.5">
+                            <i class="fa-solid fa-comments text-indigo-400"></i> Contact Time
+                        </button>
+                        <button onclick="applyPreset('SAT meeting')" class="px-3 py-1.5 bg-slate-700/70 hover:bg-indigo-600 text-slate-200 hover:text-white rounded-lg text-xs font-medium transition-all border border-slate-600/50 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users text-indigo-400"></i> SAT meeting
+                        </button>
+                        <button onclick="applyPreset('Department Meeting')" class="px-3 py-1.5 bg-slate-700/70 hover:bg-indigo-600 text-slate-200 hover:text-white rounded-lg text-xs font-medium transition-all border border-slate-600/50 flex items-center gap-1.5">
+                            <i class="fa-solid fa-building text-indigo-400"></i> Department Meeting
+                        </button>
+                    </div>
+                </div>
+
+                <hr class="border-slate-700/50">
+
+                <!-- Input Fields -->
+                <div class="space-y-5">
+                    <!-- Meeting Name Input -->
+                    <div>
+                        <label for="meeting-name" class="block text-sm font-medium text-slate-200 mb-2 flex items-center justify-between">
+                            <span>Name of Meeting <span class="text-rose-400">*</span></span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-heading"></i>
+                            </div>
+                            <input type="text" id="meeting-name" value="Contact Time" placeholder="e.g. Contact Time" 
+                                class="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Single Meeting Date Input -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="meeting-date" class="block text-sm font-medium text-slate-200">
+                                Meeting Date <span class="text-rose-400">*</span>
+                            </label>
+                            <button onclick="setToday()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1 transition-colors">
+                                <i class="fa-solid fa-calendar-day"></i> Set to Today
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-calendar-days"></i>
+                            </div>
+                            <input type="date" id="meeting-date" 
+                                class="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm font-medium">
+                        </div>
+                        
+                        <!-- Calculated Excel Serial Display -->
+                        <div class="mt-2.5 flex items-center gap-2 text-xs text-slate-400 bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
+                            <i class="fa-solid fa-calculator text-indigo-400"></i>
+                            <span>Excel <code class="text-indigo-300 font-mono font-semibold">=VALUE()</code> serial number:</span>
+                            <span id="excel-value-badge" class="font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded text-xs ml-auto">
+                                46272
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generated URL Output Box -->
+                <div class="pt-2">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        Generated Form URL
+                    </label>
+                    <div class="p-3 bg-slate-900 rounded-xl border border-slate-700/80 flex items-center justify-between gap-3 group">
+                        <div class="overflow-x-auto whitespace-nowrap text-xs font-mono text-indigo-300 scrollbar-none py-1" id="generated-url-text">
+                            https://form.gov.sg/...
+                        </div>
+                        <button onclick="copyGeneratedUrl()" title="Copy Link" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors shrink-0 flex items-center gap-1.5 text-xs font-medium">
+                            <i class="fa-regular fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Panel: QR Code Display -->
+            <div class="lg:col-span-5 bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur-sm flex flex-col items-center text-center">
+                
+                <h2 class="text-lg font-bold text-slate-100 mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode text-indigo-400"></i>
+                    <span>Meeting QR Code Attendance</span>
+                </h2>
+                <p class="text-slate-400 text-xs mb-5">Scan to open the pre-filled attendance form</p>
+
+                <!-- QR Container -->
+                <div class="relative group p-5 bg-white rounded-2xl shadow-xl border border-slate-700 transition-all duration-300 hover:scale-[1.02]">
+                    <div id="qrcode-container" class="flex items-center justify-center"></div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="w-full mt-6 space-y-3">
+                    <button onclick="openPresentationMode()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-expand"></i>
+                        <span>Fullscreen Presentation Mode</span>
+                    </button>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="downloadQRCode()" class="py-2.5 px-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition-all border border-slate-600/50">
+                            <i class="fa-solid fa-download"></i> Download QR
+                        </button>
+                        <a id="open-link-btn" href="#" target="_blank" class="py-2.5 px-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition-all border border-slate-600/50">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Form
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer with Credit Link -->
+        <footer class="mt-auto pt-10 pb-4 border-t border-slate-800/80 text-center text-xs text-slate-500">
+            <div class="flex items-center justify-center gap-2">
+                <span>Meeting QR Code Generator</span>
+                <span>•</span>
+                <button onclick="openCreditsModal()" class="text-indigo-400 hover:text-indigo-300 font-medium inline-flex items-center gap-1 transition-colors hover:underline">
+                    <i class="fa-brands fa-github text-sm"></i>
+                    <span>Credits & GitHub</span>
+                </button>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const BASE_FORM_URL = "https://form.gov.sg/6a9514ac7fd11bee9e8e6ef8";
+        const PARAM_EXCEL_DATE = "6a951582714b672fb94595b4";
+        const PARAM_MEETING_NAME = "6a9e28df0cc2dca74f22d009";
+
+        let mainQrInstance = null;
+        let presQrInstance = null;
+
+        // Calculate Excel serial date number
+        function calculateExcelSerial(dateString) {
+            if (!dateString) return 0;
+            const [year, month, day] = dateString.split('-').map(Number);
+            const inputDate = new Date(Date.UTC(year, month - 1, day));
+            const excelEpoch = new Date(Date.UTC(1899, 11, 30)); 
+            const diffDays = Math.round((inputDate - excelEpoch) / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+
+        // Format Date to dd/mm/yyyy
+        function formatDisplayDate(dateString) {
+            if (!dateString) return '';
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        // Build URL
+        function buildFormUrl(meetingName, excelSerial) {
+            const url = new URL(BASE_FORM_URL);
+            url.searchParams.set(PARAM_EXCEL_DATE, excelSerial);
+            url.searchParams.set(PARAM_MEETING_NAME, meetingName);
+            return url.toString();
+        }
+
+        // Update Generator UI
+        function updateGenerator() {
+            const nameInput = document.getElementById('meeting-name').value.trim() || "Meeting";
+            const dateInput = document.getElementById('meeting-date').value;
+
+            const excelSerial = calculateExcelSerial(dateInput);
+            document.getElementById('excel-value-badge').textContent = excelSerial;
+
+            const fullUrl = buildFormUrl(nameInput, excelSerial);
+            document.getElementById('generated-url-text').textContent = fullUrl;
+            document.getElementById('open-link-btn').href = fullUrl;
+
+            // Generate Main QR
+            const qrcodeContainer = document.getElementById('qrcode-container');
+            qrcodeContainer.innerHTML = '';
+            mainQrInstance = new QRCode(qrcodeContainer, {
+                text: fullUrl,
+                width: 200,
+                height: 200,
+                colorDark: "#0f172a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        // Set Date to Today
+        function setToday() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('meeting-date').value = `${yyyy}-${mm}-${dd}`;
+            updateGenerator();
+        }
+
+        // Apply Preset
+        function applyPreset(presetName) {
+            document.getElementById('meeting-name').value = presetName;
+            updateGenerator();
+        }
+
+        // Copy URL
+        function copyGeneratedUrl() {
+            const url = document.getElementById('generated-url-text').textContent;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("Form URL copied to clipboard!");
+            });
+        }
+
+        // Download QR
+        function downloadQRCode() {
+            const img = document.querySelector('#qrcode-container img');
+            const canvas = document.querySelector('#qrcode-container canvas');
+            const src = img ? img.src : (canvas ? canvas.toDataURL("image/png") : null);
+
+            if (src) {
+                const a = document.createElement('a');
+                a.href = src;
+                a.download = `Meeting-QR-${document.getElementById('meeting-name').value.replace(/\s+/g, '_')}.png`;
+                a.click();
+                showToast("QR Code downloaded!");
+            }
+        }
+
+        // Presentation Mode Functions
+        function openPresentationMode() {
+            const name = document.getElementById('meeting-name').value.trim() || "Meeting";
+            const dateStr = document.getElementById('meeting-date').value;
+            const excelSerial = calculateExcelSerial(dateStr);
+            const formattedDate = formatDisplayDate(dateStr);
+            const fullUrl = document.getElementById('generated-url-text').textContent;
+
+            document.getElementById('pres-meeting-name').textContent = name;
+            document.getElementById('pres-meeting-date').textContent = `${formattedDate} (Excel Value: ${excelSerial})`;
+
+            const presContainer = document.getElementById('presentation-qrcode');
+            presContainer.innerHTML = '';
+            presQrInstance = new QRCode(presContainer, {
+                text: fullUrl,
+                width: 320,
+                height: 320,
+                colorDark: "#0f172a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('presentation-overlay').classList.remove('hidden');
+            document.getElementById('presentation-overlay').classList.add('flex');
+        }
+
+        function closePresentationMode() {
+            document.getElementById('presentation-overlay').classList.add('hidden');
+            document.getElementById('presentation-overlay').classList.remove('flex');
+        }
+
+        // Credits Modal Functions
+        function openCreditsModal() {
+            const modal = document.getElementById('credits-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeCreditsModal() {
+            const modal = document.getElementById('credits-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Show Toast Notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-[-150%]', 'opacity-0');
+            }, 2500);
+        }
+
+        // Close modal on click outside content
+        document.getElementById('credits-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('credits-modal')) {
+                closeCreditsModal();
+            }
+        });
+
+        // Keyboard listener for ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePresentationMode();
+                closeCreditsModal();
+            }
+        });
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('meeting-name').addEventListener('input', updateGenerator);
+            document.getElementById('meeting-date').addEventListener('change', updateGenerator);
+
+            // Default initial date: Today
+            const defaultDate = new Date();
+            const yyyy = defaultDate.getFullYear();
+            const mm = String(defaultDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(defaultDate.getDate()).padStart(2, '0');
+            document.getElementById('meeting-date').value = `${yyyy}-${mm}-${dd}`;
+
+            updateGenerator();
+        });
+    </script>
+</body>
+</html>
